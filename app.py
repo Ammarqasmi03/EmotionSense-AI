@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 # -----------------------------------------------------------------------------
-# 1. PAGE CONFIGURATION
+# 1. PAGE CONFIGURATION & INLINE MODERN THEME
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="EmotionSense AI",
@@ -14,18 +14,72 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Load external CSS
+# Load external or premium embedded CSS fallback
 def load_css(file_name="style.css"):
     if os.path.exists(file_name):
         with open(file_name, "r") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     else:
-        # Fallback inline minimal styling if style.css is missing
+        # High-end Dark Gradient Theme fallback
         st.markdown("""
             <style>
-                .hero-section { text-align: center; padding: 2rem 0; }
-                .metric-card { background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); }
-                .footer { text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); }
+                /* Hero Section Styling */
+                .hero-section { 
+                    text-align: center; 
+                    padding: 2.5rem 1.5rem; 
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1));
+                    border-radius: 16px;
+                    border: 1px solid rgba(168, 85, 247, 0.2);
+                    margin-bottom: 2.5rem;
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+                }
+                .hero-section h1 {
+                    background: linear-gradient(45deg, #3b82f6, #a855f7);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    font-weight: 800;
+                }
+                
+                /* Glassmorphism Metric Cards */
+                .metric-card { 
+                    background: rgba(30, 41, 59, 0.45); 
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    padding: 1.5rem; 
+                    border-radius: 12px; 
+                    border: 1px solid rgba(255, 255, 255, 0.08); 
+                    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2);
+                    margin-bottom: 1rem;
+                }
+                
+                /* Streamlit default element overrides for custom feel */
+                div.stButton > button:first-child {
+                    background: linear-gradient(90deg, #3b82f6, #a855f7) !important;
+                    color: white !important;
+                    border: none !important;
+                    font-weight: bold !important;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+                }
+                div.stButton > button:first-child:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 0 15px rgba(168, 85, 247, 0.5) !important;
+                }
+                
+                /* Fine-tuned Footer */
+                .footer { 
+                    text-align: center; 
+                    margin-top: 4rem; 
+                    padding: 2rem 0; 
+                    border-top: 1px solid rgba(255, 255, 255, 0.05); 
+                }
+                .footer a {
+                    color: #3b82f6 !important;
+                    font-weight: 600;
+                    transition: color 0.2s ease;
+                }
+                .footer a:hover {
+                    color: #a855f7 !important;
+                }
             </style>
         """, unsafe_allow_html=True)
 
@@ -36,17 +90,17 @@ load_css("style.css")
 # -----------------------------------------------------------------------------
 @st.cache_resource
 def load_ml_components():
-    """Loads and caches the trained model and vectorizer."""
+    """Loads and caches the trained model, vectorizer, and label encoder."""
     try:
         model = joblib.load("model.pkl")
         vectorizer = joblib.load("vectorizer.pkl")
         label_encoder = joblib.load("label_encoder.pkl")
-        return model, vectorizer , label_encoder
+        return model, vectorizer, label_encoder
     except FileNotFoundError:
-        st.error("⚠️ Model or Vectorizer files not found! Please ensure 'model.pkl','vectorizer.pkl' and 'label_encoder' are in the project root.")
+        st.error("⚠️ Model or Vectorizer files not found! Please ensure 'model.pkl', 'vectorizer.pkl' and 'label_encoder.pkl' are in the project root.")
         return None, None, None
 
-model, vectorizer ,label_encoder = load_ml_components()
+model, vectorizer, label_encoder = load_ml_components()
 
 # Emoji Mapping Constants
 EMOJI_MAPPING = {
@@ -65,18 +119,18 @@ if "prediction_history" not in st.session_state:
 # -----------------------------------------------------------------------------
 # 3. CORE LOGIC FUNCTIONS
 # -----------------------------------------------------------------------------
-def predict_emotion(text, model, vectorizer,label_encoder):
+def predict_emotion(text, model, vectorizer, label_encoder):
     """Transforms input text and returns predicted class, confidence, and sorted probabilities."""
     # Transform text using the loaded CountVectorizer
     transformed_text = vectorizer.transform([text])
     
     # Predict probabilities and classes
     probabilities = model.predict_proba(transformed_text)[0]
-    classes = label_encoder.inverse_transform(model.classes_)
-
-    classes = [emotion.capitalize() for emotion in label_encoder.inverse_transform(model.classes_)]
     
-    # Create a clean dataframe/dictionary mapping
+    # Decoded & capitalized classes map smoothly to presentation layers
+    classes = [str(emotion).capitalize() for emotion in label_encoder.inverse_transform(model.classes_)]
+    
+    # Create a clean dictionary mapping
     prob_map = {classes[i]: probabilities[i] for i in range(len(classes))}
     
     # Sort probabilities from highest to lowest
@@ -89,11 +143,9 @@ def predict_emotion(text, model, vectorizer,label_encoder):
 
 def add_to_history(text, emotion):
     """Maintains a rolling log of the last 5 unique or newest predictions."""
-    # Ensure text is clean and truncated if too long for preview
     preview_text = text if len(text) <= 40 else text[:37] + "..."
     new_entry = {"text": f'"{preview_text}"', "emotion": emotion}
     
-    # Prepend new prediction to history
     st.session_state.prediction_history.insert(0, new_entry)
     
     # Keep only the latest 5 entries
@@ -104,22 +156,21 @@ def add_to_history(text, emotion):
 # 4. SIDEBAR IMPLEMENTATION
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("<h2 style='text-align: center;'>🧠 EmotionSense AI</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; background: linear-gradient(45deg, #3b82f6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>🧠 EmotionSense AI</h2>", unsafe_allow_html=True)
     st.markdown("---")
     
     st.markdown("### 📋 About Project")
     st.caption("An intelligent NLP application capable of identifying underlying emotional sentiments within text inputs in real time.")
     
     st.markdown("### 📊 Model Metrics")
-    st.markdown("**Algorithm:** Logistic Regression")
-    st.markdown("**Feature Extraction:** CountVectorizer")
-    st.markdown("**Accuracy:** `90%`")
+    st.markdown("**Algorithm:** `Logistic Regression`")
+    st.markdown("**Feature Extraction:** `CountVectorizer`")
+    st.markdown("**Accuracy:** <span style='color: #2ecc71; font-weight: bold;'>90%</span>", unsafe_allow_html=True)
     
     st.markdown("### 📂 Dataset Information")
     st.caption("Trained on a multiclass English Emotion Dataset classifying texts into Joy, Sadness, Anger, Fear, Love, and Surprise.")
     
     st.markdown("### 🛠️ Technologies Used")
-    st.tags = ["Python", "Streamlit", "Scikit-Learn", "Pandas", "NumPy"]
     st.markdown(
         "• Python  \n• Streamlit  \n• Scikit-Learn  \n• Pandas  \n• NumPy"
     )
@@ -131,9 +182,9 @@ with st.sidebar:
 st.markdown(
     """
     <div class="hero-section">
-        <h1>😊 EmotionSense AI</h1>
-        <h3>AI-Powered Emotion Detection System</h3>
-        <p style="font-size: 1.15rem; opacity: 0.85;">
+        <h1 style="font-size: 2.8rem; margin-bottom: 0.5rem;">😊 EmotionSense AI</h1>
+        <h3 style="font-weight: 400; opacity: 0.9; margin-top: 0;">AI-Powered Emotion Detection System</h3>
+        <p style="font-size: 1.1rem; opacity: 0.75; max-width: 700px; margin: 0 auto;">
             Analyze the emotion behind any sentence using Machine Learning and Natural Language Processing.
         </p>
     </div>
@@ -164,7 +215,7 @@ with col1:
     if predict_btn:
         if not user_input.strip():
             st.error("🚨 Please type a valid sentence before analyzing!")
-        elif model is None or vectorizer is None:
+        elif model is None or vectorizer is None or label_encoder is None:
             st.error("🚨 Core engine missing. Check backend files.")
         else:
             with st.spinner("Analyzing emotional dimensions..."):
@@ -174,7 +225,6 @@ with col1:
                 # Cache results to history
                 add_to_history(user_input, emotion)
                 
-                # Store structural parameters for display outside the spinner container
                 st.session_state.current_results = {
                     "emotion": emotion,
                     "confidence": confidence,
@@ -191,33 +241,30 @@ with col1:
         st.markdown("### 🏆 Prediction Summary")
         st.markdown(
             f"""
-            <div class="metric-card" style="text-align: center; border-radius: 12px; padding: 20px;">
-                <h1 style="font-size: 3.5rem; margin-bottom: 0;">{emoji} {res["emotion"]}</h1>
-                <p style="letter-spacing: 1px; font-size: 0.9rem; text-transform: uppercase; opacity: 0.7;">Predicted Emotion</p>
-                <hr style="margin: 10px 0; opacity: 0.2;">
-                <h2 style="margin: 0; color: #2ecc71;">{res["confidence"]*100:.1f}%</h2>
-                <p style="font-size: 0.85rem; opacity: 0.7; margin: 0;">Confidence Score</p>
+            <div class="metric-card" style="text-align: center; border: 1px solid rgba(168, 85, 247, 0.3);">
+                <h1 style="font-size: 3.8rem; margin-bottom: 0; filter: drop-shadow(0 0 10px rgba(168,85,247,0.3));">{emoji} {res["emotion"]}</h1>
+                <p style="letter-spacing: 1px; font-size: 0.9rem; text-transform: uppercase; opacity: 0.6; margin-top: 5px;">Predicted Emotion</p>
+                <hr style="margin: 15px 0; opacity: 0.1;">
+                <h2 style="margin: 0; color: #a855f7; font-size: 2.5rem;">{res["confidence"]*100:.1f}%</h2>
+                <p style="font-size: 0.85rem; opacity: 0.6; margin: 0;">Confidence Score</p>
             </div>
             """, 
             unsafe_allow_html=True
         )
 
 with col2:
-    # Right Column: Probabilities Dashboard or Real-time Status Distribution
+    st.markdown("### 📊 Probability Breakdown")
     if "current_results" in st.session_state and st.session_state.current_results.get("triggered"):
-        st.markdown("### 📊 Probability Breakdown")
         for cls_name, prob_val in st.session_state.current_results["probabilities"]:
             cls_emoji = EMOJI_MAPPING.get(cls_name, "▪️")
             percentage = prob_val * 100
             
-            # Formulate structured layout rows
             st.markdown(f"**{cls_emoji} {cls_name}** • {percentage:.1f}%")
             st.progress(prob_val)
     else:
-        st.markdown("### 📊 Probability Breakdown")
         st.info("Complete an emotion prediction check to populate live breakdown analytics here.")
 
-st.markdown("---")
+st.markdown("<br><hr style='opacity: 0.1;'><br>", unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
 # 7. INFORMATION CARDS & HISTORY
@@ -229,17 +276,16 @@ with col_info:
     st.markdown(
         """
         <div class="metric-card">
-            <p><strong>EmotionSense AI</strong> is an NLP-based emotion detection application developed using 
+            <p style="line-height: 1.6; margin: 0;"><strong>EmotionSense AI</strong> is an NLP-based emotion detection application developed using 
             Streamlit and Scikit-Learn. It predicts the emotion behind user-entered text using 
-            <code>CountVectorizer</code> and a <code>Logistic Regression</code> classifier trained seamlessly on an 
-            emotion classification dataset.</p>
+            <code style="color:#3b82f6;">CountVectorizer</code> and a <code style="color:#a855f7;">Logistic Regression</code> classifier trained seamlessly on a 
+            multiclass emotion classification dataset.</p>
         </div>
         """, 
         unsafe_allow_html=True
     )
     
     st.markdown("### ⚙️ Model Details")
-    # Quick structured table layout
     df_meta = pd.DataFrame({
         "Parameter": ["Algorithm", "Vectorizer", "Accuracy Target", "Language Framework"],
         "Value": ["Logistic Regression", "CountVectorizer", "90%", "English (EN)"]
@@ -253,9 +299,9 @@ with col_hist:
             hist_emoji = EMOJI_MAPPING.get(item['emotion'], "✨")
             st.markdown(
                 f"""
-                <div style="padding: 8px 15px; background: rgba(255,255,255,0.02); border-left: 4px solid #3498db; margin-bottom: 8px; border-radius: 0 6px 6px 0;">
+                <div style="padding: 10px 15px; background: rgba(255,255,255,0.02); border-left: 4px solid #3b82f6; margin-bottom: 10px; border-radius: 0 8px 8px 0; border-top: 1px solid rgba(255,255,255,0.03); border-right: 1px solid rgba(255,255,255,0.03);">
                     <span style="font-style: italic; opacity: 0.85;">{item['text']}</span> <br>
-                    <strong style="color: #3498db;">&rarr; {hist_emoji} {item['emotion']}</strong>
+                    <strong style="color: #a855f7; font-size: 0.95rem;">&rarr; {hist_emoji} {item['emotion']}</strong>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -269,11 +315,11 @@ with col_hist:
 st.markdown(
     """
     <div class="footer">
-        <p style="margin-bottom: 5px; font-weight: bold;">Developed by Ammar Gour</p>
-        <p style="margin-top: 0; font-size: 0.9rem; opacity: 0.8;">MCA (AI & ML) | Jamia Millia Islamia</p>
-        <p style="font-size: 1.2rem;">
-            🔗 <a href="https://github.com/Ammarqasmi03/EmotionSense-AI" target="_blank" style="text-decoration:none;">GitHub</a> | 
-            🔗 <a href="https://www.linkedin.com/in/ammar-qasmi-082266289" target="_blank" style="text-decoration:none;">LinkedIn</a> | 
+        <p style="margin-bottom: 5px; font-weight: bold; font-size: 1.1rem;">Developed by Ammar Gour</p>
+        <p style="margin-top: 0; font-size: 0.9rem; opacity: 0.6; margin-bottom: 15px;">MCA (AI & ML) | Jamia Millia Islamia</p>
+        <p style="font-size: 1.1rem;">
+            🔗 <a href="https://github.com/Ammarqasmi03/EmotionSense-AI" target="_blank" style="text-decoration:none;">GitHub</a> &nbsp;|&nbsp; 
+            🔗 <a href="https://www.linkedin.com/in/ammar-qasmi-082266289" target="_blank" style="text-decoration:none;">LinkedIn</a> &nbsp;|&nbsp; 
             🔗 <a href="https://ammarqasmi03.github.io/my-portfilio/" target="_blank" style="text-decoration:none;">Portfolio</a>
         </p>
     </div>
