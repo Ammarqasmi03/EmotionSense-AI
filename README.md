@@ -6,7 +6,7 @@ An AI-powered Emotion Detection System built using **Natural Language Processing
 
 ## 🚀 Live Demo
 
-Coming Soon...
+https://emotionsense-ai-prediction-byammar.streamlit.app/
 
 ---
 
