@@ -113,7 +113,7 @@ with st.sidebar:
     st.markdown("### 📊 Model Metrics")
     st.markdown("**Algorithm:** Logistic Regression")
     st.markdown("**Feature Extraction:** CountVectorizer")
-    st.markdown("**Accuracy:** `89%`精度")
+    st.markdown("**Accuracy:** `90%`")
     
     st.markdown("### 📂 Dataset Information")
     st.caption("Trained on a multiclass English Emotion Dataset classifying texts into Joy, Sadness, Anger, Fear, Love, and Surprise.")
@@ -272,9 +272,9 @@ st.markdown(
         <p style="margin-bottom: 5px; font-weight: bold;">Developed by Ammar Gour</p>
         <p style="margin-top: 0; font-size: 0.9rem; opacity: 0.8;">MCA (AI & ML) | Jamia Millia Islamia</p>
         <p style="font-size: 1.2rem;">
-            🔗 <a href="#" target="_blank" style="text-decoration:none;">GitHub</a> | 
-            🔗 <a href="#" target="_blank" style="text-decoration:none;">LinkedIn</a> | 
-            🔗 <a href="#" target="_blank" style="text-decoration:none;">Portfolio</a>
+            🔗 <a href="https://github.com/Ammarqasmi03/EmotionSense-AI" target="_blank" style="text-decoration:none;">GitHub</a> | 
+            🔗 <a href="https://www.linkedin.com/in/ammar-qasmi-082266289" target="_blank" style="text-decoration:none;">LinkedIn</a> | 
+            🔗 <a href="https://ammarqasmi03.github.io/my-portfilio/" target="_blank" style="text-decoration:none;">Portfolio</a>
         </p>
     </div>
     """,
