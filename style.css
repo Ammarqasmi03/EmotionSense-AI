@@ -59,7 +59,7 @@ font-size:15px;
                     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
                 }
 .hero-section h1 {
-                    background: linear-gradient(45deg, #3b82f6, #a855f7);
+                    color : linear-gradient(45deg, #3b82f6, #a855f7);
                     
                     font-weight: 800;
                 }
